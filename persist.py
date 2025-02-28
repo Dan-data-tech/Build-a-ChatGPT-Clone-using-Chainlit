@@ -5,28 +5,16 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
 from langchain.schema.runnable.config import RunnableConfig
 from langchain.memory import ConversationBufferMemory
-#from langchain_community.chat_message_histories import RedisChatMessageHistory
-#from langchain_core.chat_history import InMemoryChatMessageHistory
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer 
-# import redis
 import chainlit as cl
 from chainlit.types import ThreadDict
 from chainlit.step import StepDict
 from dotenv import load_dotenv
-#import json
-import asyncio
 
 
 load_dotenv()
 
-# REDIS_HOST = "localhost"
-# REDIS_PORT = 6379
-# #REDIS_KEY_PREFIX = "chat_memory:"
-# REDIS_URL=f"redis://{REDIS_HOST}:{REDIS_PORT}" 
-# def get_redis_history(session_id: str):
-#     return RedisChatMessageHistory(url=REDIS_URL, session_id=session_id)
-# engine = create_engine(DATABASE_URL)
-# Session = sessionmaker(bind=engine)
+
 DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/chainlit"
 
 
@@ -35,7 +23,6 @@ def get_data_layer():
     return SQLAlchemyDataLayer(conninfo=DATABASE_URL)
 
 data_layer = get_data_layer()
-print(type(data_layer))
 
 @cl.set_starters
 async def set_starters():
@@ -43,13 +30,13 @@ async def set_starters():
         cl.Starter(
             label="Morning routine ideation",
             message="Can you help me create a personalized morning routine that would help increase my productivity throughout the day? Start by asking me about my current habits and what activities energize me in the morning.",
-           # icon="/public/idea.svg",
+            icon=r"assets\lightbulb-on.png",
             ),
 
         cl.Starter(
             label="Explain superconductors",
             message="Explain superconductors like I'm five years old.",
-           # icon="/public/learn.svg",
+            icon=r"/public/learn.svg",
             ),
         cl.Starter(
             label="Python script for daily email reports",
@@ -69,7 +56,7 @@ def setup_runnable():
         model = ChatTogether(streaming=True)
         prompt = ChatPromptTemplate.from_messages(
             [
-                ("system","You are a helpful chatbot named smiley"),
+                ("system","You are a ChatGPT"),
                 MessagesPlaceholder(variable_name="history"),
                 ("human","{question}")
             ]
@@ -89,11 +76,13 @@ def setup_runnable():
 async def password_auth_callback(username: str, password: str):
     # if it returns a user that passed the conditions that it's authenticated
 
-    # user = cl.User(identifier=username, metadata={"password": password})
-    # await data_layer.create_user(user)
-    if (username, password) == ("admin", "admin"):
+    if (username, password) == ("admin", "admin"): 
         return cl.User(
             identifier="admin", metadata={"role": "admin", "provider": "credentials"}
+        )
+    elif (username, password) == ("user", "test"):
+        return cl.User(
+            identifier="user", metadata={"role": "user", "provider": "credentials"}
         )
     else:
         return None
@@ -102,9 +91,7 @@ async def password_auth_callback(username: str, password: str):
 
 @cl.on_chat_start
 async def on_chat_start():
-    memory = ConversationBufferMemory(
-        #chat_memory=get_redis_history(session_id), 
-        return_messages=True)
+    memory = ConversationBufferMemory(return_messages=True)
     cl.user_session.set("memory", memory)
     setup_runnable() 
     
@@ -112,18 +99,13 @@ async def on_chat_start():
 
 @cl.on_chat_resume
 async def on_chat_resume(thread: ThreadDict):
-    print(thread["id"])
-    memory = ConversationBufferMemory(
-        #chat_memory=get_redis_history(thread_id),
-        return_messages=True)  
-    root_messages = [m for m in thread["steps"] if m["parentId"] == None]
+    memory = ConversationBufferMemory(return_messages=True)  
+    root_messages = [m for m in thread["steps"] if m["parentId"] == None] 
     for message in root_messages:
         if message["type"] == "user_message":
-            memory.chat_memory.add_user_message(message["output"])
-            message.content.send()
+            memory.chat_memory.add_user_message(message["output"])           
         else:
-            memory.chat_memory.add_ai_message(message["output"])
-            message.content.send()
+            memory.chat_memory.add_ai_message(message["output"])       
     cl.user_session.set("memory", memory)
     setup_runnable()
    
@@ -143,29 +125,10 @@ async def on_message(message: cl.Message):
         await res.stream_token(chunk)
 
     await res.send()
-    
-    user_step_dict = StepDict(
-        name="User Message",
-        type="user_message",
-        streaming=True,
-        threadId=cl.user_session.get("thread_id"),
-        input=message.content
-    )
-    ai_step_dict = StepDict(
-        name="Assistant Message",
-        type="assistant_message",
-        streaming=True,
-        threadId=cl.user_session.get("thread_id"),
-        output=res.content
-    )
-
-    #register on databse 
-    await data_layer.create_step(user_step_dict)
-    await data_layer.create_step(ai_step_dict)
 
     #save on in-memory for chat context
     memory.chat_memory.add_user_message(message.content)
-    memory.chat_memory.add_ai_message(res)
+    memory.chat_memory.add_ai_message(res.content)
 
 
 
