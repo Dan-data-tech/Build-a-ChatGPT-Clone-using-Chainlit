@@ -57,7 +57,7 @@
     },
     "chat": {
         "input": {
-            "placeholder": "Type your message here...",
+            "placeholder": "Ask anything",
             "actions": {
                 "send": "Send message",
                 "stop": "Stop Task",
@@ -111,7 +111,7 @@
         "settings": {
             "title": "Settings panel"
         },
-        "watermark": "Built with"
+        "watermark": ""
     },
     "threadHistory": {
         "sidebar": {
@@ -126,7 +126,7 @@
                 "previous7days": "Previous 7 days",
                 "previous30days": "Previous 30 days"
             },
-            "empty": "No threads found",
+            "empty": "No Previous Chats",
             "actions": {
                 "close": "Close sidebar",
                 "open": "Open sidebar"
