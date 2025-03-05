@@ -111,7 +111,7 @@
         "settings": {
             "title": "Settings panel"
         },
-        "watermark": ""
+        "watermark": "Built with"
     },
     "threadHistory": {
         "sidebar": {
@@ -141,7 +141,7 @@
             "actions": {
                 "delete": {
                     "title": "Confirm deletion",
-                    "description": "This will delete the thread as well as its messages and elements. This action cannot be undone",
+                    "description": "This will delete the chat as well as its messages and elements. This action cannot be undone",
                     "success": "Chat deleted",
                     "inProgress": "Deleting chat"
                 },
@@ -154,8 +154,8 @@
                             "placeholder": "Enter new name"
                         }
                     },
-                    "success": "Thread renamed!",
-                    "inProgress": "Renaming thread"
+                    "success": "Chat renamed!",
+                    "inProgress": "Renaming chat"
                 }
             }
         }
