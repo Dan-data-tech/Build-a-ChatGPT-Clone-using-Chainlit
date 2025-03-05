@@ -1,17 +1,15 @@
-from operator import itemgetter
-from langchain_together import ChatTogether
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema.runnable.config import RunnableConfig
+from langchain.schema.output_parser import StrOutputParser
+from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
 from langchain.memory import ConversationBufferMemory
-from chainlit.data.sql_alchemy import SQLAlchemyDataLayer 
-import chainlit as cl
+from langchain_together import ChatTogether
 from chainlit.types import ThreadDict
-from chainlit.step import StepDict
+from operator import itemgetter
+import chainlit as cl
+
 from dotenv import load_dotenv
-
-
 load_dotenv()
 
 
@@ -50,13 +48,17 @@ async def set_starters():
             )
         ]
 
+# Here's what happens when the chatbot encounters the MessagesPlaceholder:
+# The chatbot retrieves the conversation history from the memory object using the memory.load_memory_variables method.
+# The chatbot extracts the "history" variable from the retrieved memory variables using the itemgetter("history") function.
+# The chatbot replaces the MessagesPlaceholder with the actual conversation history, which is the extracted "history" variable.
 
 def setup_runnable():
         memory = cl.user_session.get("memory")
         model = ChatTogether(streaming=True)
         prompt = ChatPromptTemplate.from_messages(
             [
-                ("system","You are a ChatGPT"),
+                ("system","You are ChatGPT"),
                 MessagesPlaceholder(variable_name="history"),
                 ("human","{question}")
             ]
@@ -91,8 +93,7 @@ async def password_auth_callback(username: str, password: str):
 
 @cl.on_chat_start
 async def on_chat_start():
-    memory = ConversationBufferMemory(return_messages=True)
-    cl.user_session.set("memory", memory)
+    cl.user_session.set("memory", ConversationBufferMemory(return_messages=True))
     setup_runnable() 
     
 
