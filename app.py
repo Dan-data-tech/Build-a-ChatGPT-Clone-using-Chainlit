@@ -8,7 +8,6 @@ from langchain_together import ChatTogether
 from chainlit.types import ThreadDict
 from operator import itemgetter
 import chainlit as cl
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -95,7 +94,6 @@ async def password_auth_callback(username: str, password: str):
 async def on_chat_start():
     cl.user_session.set("memory", ConversationBufferMemory(return_messages=True))
     setup_runnable() 
-    
 
 
 @cl.on_chat_resume
