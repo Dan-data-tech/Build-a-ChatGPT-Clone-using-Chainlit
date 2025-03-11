@@ -102,7 +102,7 @@ async def on_chat_start():
 @cl.on_chat_resume
 async def on_chat_resume(thread: ThreadDict):
     memory = ConversationBufferMemory(return_messages=True)
-    root_messages = [m for m in thread["steps"] if m["parentId"] == None]
+    root_messages = [m for m in thread["steps"] if m["parentId"] is None]
     for message in root_messages:
         if message["type"] == "user_message":
             memory.chat_memory.add_user_message(message["output"])
